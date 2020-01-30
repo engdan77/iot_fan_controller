@@ -16,14 +16,18 @@ default_config = {'essid': 'MYWIFI',
 
 def start_ap(ssid='fan_control', password='123456789'):
     ap = network.WLAN(network.AP_IF)
+    ap.active(False)
+    utime.sleep(1)
     ap.active(True)
     ap.config(essid=ssid, password=password)
+    print('AP mode started')
     print(ap.ifconfig())
 
 
 def wifi_connect(essid, password):
     connected = False
     sta_if = network.WLAN(network.STA_IF)
+    sta_if.active(False)
     if not sta_if.isconnected():
         print('connecting to network...')
         sta_if.active(True)
@@ -34,7 +38,11 @@ def wifi_connect(essid, password):
             if sta_if.isconnected():
                 connected = True
                 break
+        sta_if.active(False)
+    else:
+        connected = True
     if connected:
+        print('WIFI mode started')
         print('network config:', sta_if.ifconfig())
     return connected
 
@@ -42,7 +50,7 @@ def wifi_connect(essid, password):
 def get_config():
     try:
         c = ujson.loads(open(config_file).read())
-    except OSError:
+    except (OSError, ValueError):
         c = default_config
         open(config_file, 'w').write(ujson.dumps(c))
     return c
@@ -54,11 +62,6 @@ def s():
     wifi_connected = wifi_connect(c['essid'], c['password'])
     if not wifi_connected:
         start_ap()
-    print(locals())
-    print(globals())
-    print(gc.mem_free())
-    gc.collect()
-    import fan_control
 
 
 def main():
