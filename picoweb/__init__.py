@@ -1,11 +1,9 @@
 # Picoweb web pico-framework for Pycopy, https://github.com/pfalcon/pycopy
 # Copyright (c) 2014-2020 Paul Sokolovsky
 # SPDX-License-Identifier: MIT
-import sys
 import gc
 import micropython
 import utime
-import uio
 import ure as re
 import uerrno
 import uasyncio as asyncio

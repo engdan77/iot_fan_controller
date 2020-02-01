@@ -1,8 +1,7 @@
 # Fan control
 import fan_control
 from mywifi import stop_all_wifi, start_ap, wifi_connect
-from myconfig import get_config, save_config
-
+from myconfig import get_config
 
 default_config = {'essid': 'MYWIFI',
                   'password': 'MYPASSWORD',

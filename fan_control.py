@@ -1,11 +1,11 @@
 import logging
+import mypicoweb
 import uasyncio as asyncio
 import dht
 from machine import Pin
 from ucollections import deque
 import ujson
 from mypicoweb import MyPicoWeb
-import mypicoweb
 
 
 def web_index(req, resp, **kwargs):
@@ -15,11 +15,23 @@ def web_index(req, resp, **kwargs):
 
 
 def web_status(req, resp, **kwargs):
+    fan_obj = kwargs.get('fan_obj', None)
+    print('*'*30)
+    print(req)
+    print(resp)
     print(kwargs)
     temp_obj = kwargs.get('temp_obj', None)
     fan_obj = kwargs.get('fan_obj', None)
     yield from mypicoweb.start_response(resp)
-    return_data = {'temp': temp_obj.read(), 'status': fan_obj.state_text}
+    print('parseing query param')
+    params = req.qs
+    if params == 'state=on':
+        print('turn on fan')
+        fan_obj.switch_state(True)
+    elif params == 'state=off':
+        print('turn on fan')
+        fan_obj.switch_state(False)
+    return_data = {'temp': temp_obj.read(), 'status': fan_obj.state_text, 'params': str(params)}
     print(req)
     yield from resp.awrite(ujson.dumps(return_data))
 
