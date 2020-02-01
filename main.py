@@ -1,16 +1,11 @@
 # Fan control
-import network
-import ujson
-import utime
 import fan_control
 from mywifi import stop_all_wifi, start_ap, wifi_connect
 from myconfig import get_config, save_config
 
-config_file = 'config.json'
 
 default_config = {'essid': 'MYWIFI',
                   'password': 'MYPASSWORD',
-                  'mqtt_enabled': False,
                   'mqtt_broker': '127.0.0.1',
                   'mqtt_username': 'user',
                   'mqtt_password': 'password'}

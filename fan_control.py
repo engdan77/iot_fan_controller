@@ -1,110 +1,33 @@
 import logging
-import picoweb
 import uasyncio as asyncio
 import dht
 from machine import Pin
 from ucollections import deque
-import utime
-from picoweb import HTTPRequest, start_response
 import ujson
+from mypicoweb import MyPicoWeb
+import mypicoweb
 
 
-class MyPicoWeb(picoweb.WebApp):
-    def __init__(self, pkg, routes=None, serve_static=True, temp_obj=None):
-        self.temp_obj = temp_obj
-        super().__init__(pkg, routes, serve_static)
+def web_index(req, resp, **kwargs):
+    yield from mypicoweb.start_response(resp)
+    with open('index.html') as f:
+        yield from resp.awrite(f.read())
 
-    def _handle(self, reader, writer):
-        if self.debug > 1:
-            micropython.mem_info()
-        close = True
-        req = None
-        try:
-            request_line = yield from reader.readline()
-            if request_line == b"":
-                if self.debug >= 0:
-                    self.log.error("%s: EOF on request start" % reader)
-                yield from writer.aclose()
-                return
-            req = HTTPRequest()
-            request_line = request_line.decode()
-            method, path, proto = request_line.split()
-            if self.debug >= 0:
-                self.log.info('%.3f %s %s "%s %s"' % (utime.time(), req, writer, method, path))
-            path = path.split("?", 1)
-            qs = ""
-            if len(path) > 1:
-                qs = path[1]
-            path = path[0]
-            # Find which mounted subapp (if any) should handle this request
-            app = self
-            while True:
-                found = False
-                for subapp in app.mounts:
-                    root = subapp.url
-                    if path[:len(root)] == root:
-                        app = subapp
-                        found = True
-                        path = path[len(root):]
-                        if not path.startswith("/"):
-                            path = "/" + path
-                        break
-                if not found:
-                    break
-            if not app.inited:
-                app.init()
-            # Find handler to serve this request in app's url_map
-            found = False
-            for e in app.url_map:
-                pattern = e[0]
-                handler = e[1]
-                extra = {}
-                if len(e) > 2:
-                    extra = e[2]
 
-                if path == pattern:
-                    found = True
-                    break
-                elif not isinstance(pattern, str):
-                    m = pattern.match(path)
-                    if m:
-                        req.url_match = m
-                        found = True
-                        break
-            if not found:
-                headers_mode = "skip"
-            else:
-                headers_mode = extra.get("headers", self.headers_mode)
+def web_status(req, resp, **kwargs):
+    print(kwargs)
+    temp_obj = kwargs.get('temp_obj', None)
+    fan_obj = kwargs.get('fan_obj', None)
+    yield from mypicoweb.start_response(resp)
+    return_data = {'temp': temp_obj.read(), 'status': fan_obj.state_text}
+    print(req)
+    yield from resp.awrite(ujson.dumps(return_data))
 
-            if headers_mode == "skip":
-                while True:
-                    l = yield from reader.readline()
-                    if l == b"\r\n":
-                        break
-            elif headers_mode == "parse":
-                req.headers = yield from self.parse_headers(reader)
-            else:
-                assert headers_mode == "leave"
 
-            if found:
-                req.method = method
-                req.path = path
-                req.qs = qs
-                req.reader = reader
-                # My customization to pass temp object
-                close = yield from handler(req, writer, temp_obj=self.temp_obj)
-            else:
-                yield from start_response(writer, status="404")
-                yield from writer.awrite("404\r\n")
-        except Exception as e:
-            if self.debug >= 0:
-                self.log.exc(e, "%.3f %s %s %r" % (utime.time(), req, writer, e))
-            yield from self.handle_exc(req, writer, e)
-
-        if close is not False:
-            yield from writer.aclose()
-        if __debug__ and self.debug > 1:
-            self.log.debug("%.3f %s Finished processing request", utime.time(), req)
+def web_save(req, resp, **kwargs):
+    yield from mypicoweb.start_response(resp)
+    print(req)
+    yield from resp.awrite('')
 
 
 class MyTemp:
@@ -190,28 +113,6 @@ class MyButton:
             return False
 
 
-def index(req, resp, **kwargs):
-    yield from picoweb.start_response(resp)
-    with open('index.html') as f:
-        yield from resp.awrite(f.read())
-
-
-def status(req, resp, **kwargs):
-    temp_obj = kwargs.get('temp_obj', None)
-    fan_obj = kwargs.get('fan_obj', None)
-    yield from picoweb.start_response(resp)
-    return_data = {'temp': temp_obj.read(),
-                   'status': fan_obj.state_text}
-    print(req)
-    yield from resp.awrite(ujson.dumps(return_data))
-
-
-def save(req, resp, **kwargs):
-    yield from picoweb.start_response(resp)
-    print(req)
-    yield from resp.awrite('')
-
-
 async def update_temp(_temp_obj, refresh_interval=4):
     count = 0
     while True:
@@ -234,9 +135,9 @@ def start_fan_control():
     log = logging.getLogger(__name__)
 
     app = MyPicoWeb(__name__, temp_obj=temp_obj, button_obj=button_obj, fan_obj=fan_obj)
-    app.add_url_rule('/save', save)
-    app.add_url_rule('/status', status)
-    app.add_url_rule('/', index)
+    app.add_url_rule('/save', web_save)
+    app.add_url_rule('/status', web_status)
+    app.add_url_rule('/', web_index)
 
     loop.create_task(update_temp(temp_obj))
     app.run(host="0.0.0.0", port=80, log=log)

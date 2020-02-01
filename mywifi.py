@@ -1,3 +1,7 @@
+import network
+import utime
+
+
 def stop_all_wifi():
     sta_if = network.WLAN(network.STA_IF)
     sta_if.active(False)
