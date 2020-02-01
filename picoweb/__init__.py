@@ -207,7 +207,6 @@ class WebApp:
             else:
                 yield from start_response(writer, status="404")
                 yield from writer.awrite("404\r\n")
-            #print(req, "After response write")
         except Exception as e:
             if self.debug >= 0:
                 self.log.exc(e, "%.3f %s %s %r" % (utime.time(), req, writer, e))

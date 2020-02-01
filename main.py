@@ -2,7 +2,7 @@
 import network
 import ujson
 import utime
-import gc
+import fan_control
 
 config_file = 'config.json'
 
@@ -14,14 +14,21 @@ default_config = {'essid': 'MYWIFI',
                   'mqtt_password': 'password'}
 
 
-def start_ap(ssid='fan_control', password='123456789'):
+def stop_all_wifi():
+    sta_if = network.WLAN(network.STA_IF)
+    sta_if.active(False)
     ap = network.WLAN(network.AP_IF)
     ap.active(False)
+
+
+def start_ap(ssid='fan_control', password='123456789'):
+    ap = network.WLAN(network.AP_IF)
     utime.sleep(1)
     ap.active(True)
-    ap.config(essid=ssid, password=password)
+    ap.config(essid=ssid, authmode=network.AUTH_OPEN)
     print('AP mode started')
     print(ap.ifconfig())
+    utime.sleep(1)
 
 
 def wifi_connect(essid, password):
@@ -57,11 +64,13 @@ def get_config():
 
 
 def s():
+    stop_all_wifi()
     c = get_config()
     print('config loaded {}'.format(c))
     wifi_connected = wifi_connect(c['essid'], c['password'])
     if not wifi_connected:
         start_ap()
+    fan_control.start_fan_control()
 
 
 def main():

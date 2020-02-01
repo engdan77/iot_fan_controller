@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WiFi Login</title>
+    <title>Fan Control</title>
     <style>
       body {
         font-family: sans-serif;
@@ -28,12 +28,16 @@
         padding: 10px 0px 10px 0px;
       }
       input[type='text'],
-      input[type='password'] {
+      input[type='password'],
+      input[type='mqtt_broker'],
+      input[type='mqtt_user'],
+      input[type='mqtt_password'],
+      input[type='temp_threshold'] {
         background: #ecf0f1;
         border: #ccc 1px solid;
         border-bottom: #ccc 2px solid;
         padding: 8px;
-        width: 60%;
+        width: 80%;
         color: #aaa;
         margin-top: 10px;
         font-size: 1em;
@@ -51,13 +55,37 @@
         font-weight: 800;
         font-size: 0.8em;
       }
+      .btn_on {
+        background: lightgreen;
+        width: 30%;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        color: white;
+        border-radius: 4px;
+        border: #27ae60 1px solid;
+        margin: 10 auto;
+        font-weight: 800;
+        font-size: 0.8em;
+      }
+      .btn_off {
+        background: lightcoral;
+        width: 30%;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        color: white;
+        border-radius: 4px;
+        border: #27ae60 1px solid;
+        margin: 10 auto;
+        font-weight: 800;
+        font-size: 0.8em;
+      }
     </style>
   </head>
   <body>
-    <form action="/login" method="get" class="box">
-      <h1>WiFi login credentials</h1>
-      <input type="text" placeholder="My WiFi SSID" name="ssid" required />
+    <form action="/save" method="get" class="box">
+      <h1>Configuration</h1>
 
+      <input type="text" placeholder="My WiFi SSID" name="ssid" required />
       <br />
 
       <input
@@ -66,10 +94,82 @@
         name="password"
         required
       />
+      <br />
+
+      <input
+        type="mqtt_broker"
+        placeholder="MQTT broker (empty=disabled)"
+        name="mqtt_broker"
+      />
+      <br />
+
+      <input
+        type="mqtt_user"
+        placeholder="MQTT user"
+        name="mqtt_user"
+      />
+      <br />
+
+      <input
+        type="mqtt_password"
+        placeholder="MQTT password"
+        name="mqtt_password"
+      />
+      <br />
+      <input
+        type="temp_threshold"
+        placeholder="Temp. threshold"
+        name="temp_threshold"
+      />
+      <br />
 
       <br />
 
-      <button type="submit" class="btn">Connect</button>
+      <button type="submit" class="btn">Save</button>
+    </form>
+    <br />
+
+    <form class="box">
+      <h1>Fan Control</h1>
+      <button id="turn_on" class="btn_on">On</button><button id="turn_off" class="btn_off">Off</button>
+      <br />
+      Status: <div id="fan_status"></div>
+    </form>
+      <br />
+    <form class="box">
+      Current temp: <div id="temp"></div>°C
     </form>
   </body>
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script>
+
+
+  var timeout = setInterval(success, 5000);
+
+  $( document ).ready(function() {
+  var data = {};
+  $.get( "status", data, success, "json" );
+  });
+
+  function success( responseData ) {
+      var status = responseData.status;
+      var temp = responseData.temp;
+      $('#fan_status').text(status);
+      $('#temp').text(temp)
+    }
+
+    $( function() {
+    $('#turn_on').click( function() {
+      var data = { state: "on"};
+      $.get( "status", data, success, "json" );
+    } )});
+
+    $( function() {
+    $('#turn_off').click( function() {
+      var data = { state: "off"};
+      $.get( "status", data, success, "json" );
+    } )});
+  </script>
+
 </html>

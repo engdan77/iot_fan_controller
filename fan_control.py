@@ -5,7 +5,7 @@ import dht
 from machine import Pin
 from ucollections import deque
 import utime
-from picoweb import HTTPRequest
+from picoweb import HTTPRequest, start_response
 
 
 class MyPicoWeb(picoweb.WebApp):
@@ -190,6 +190,12 @@ def index(req, resp, **kwargs):
     yield from resp.awrite("This is a fan controlling system")
 
 
+def config(req, resp, **kwargs):
+    yield from picoweb.start_response(resp)
+    with open('index.html') as f:
+        yield from resp.awrite(f.read())
+
+
 def temp(req, resp, **kwargs):
     temp_obj = kwargs.get('temp_obj', None)
     yield from picoweb.start_response(resp)
@@ -218,7 +224,8 @@ def start_fan_control():
     log = logging.getLogger(__name__)
 
     app = MyPicoWeb(__name__, temp_obj=temp_obj)
-    app.add_url_rule('/temp', temp, temp='100')
+    app.add_url_rule('/temp', temp)
+    app.add_url_rule('/config', config)
     app.add_url_rule('/', index)
 
     loop.create_task(update_temp(temp_obj))

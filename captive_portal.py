@@ -37,15 +37,20 @@ class CaptivePortal:
     def start_access_point(self):
         # sometimes need to turn off AP before it will come up properly
         self.ap_if.active(False)
+
         while not self.ap_if.active():
             print("Waiting for access point to turn on")
             self.ap_if.active(True)
             time.sleep(1)
-        # IP address, netmask, gateway, DNS
+
+        self.ap_if.config(essid=self.essid, authmode=network.AUTH_OPEN)
         self.ap_if.ifconfig(
             (self.local_ip, "255.255.255.0", self.local_ip, self.local_ip)
         )
-        self.ap_if.config(essid=self.essid, authmode=network.AUTH_OPEN)
+        self.ap_if.active(False)
+        time.sleep(1)
+        self.ap_if.active(True)
+        # IP address, netmask, gateway, DNS
         print("AP mode configured:", self.ap_if.ifconfig())
 
     def connect_to_wifi(self):
