@@ -6,6 +6,7 @@ from machine import Pin
 from ucollections import deque
 import utime
 from picoweb import HTTPRequest, start_response
+import ujson
 
 
 class MyPicoWeb(picoweb.WebApp):
@@ -135,6 +136,10 @@ class MyFan:
     def on(self):
         return self.state
 
+    @property
+    def state_text(self):
+        return 'on' if self.state is True else 'off'
+
     def switch_state(self, state=None):
         if state is None:
             self.state = not self.state
@@ -187,19 +192,24 @@ class MyButton:
 
 def index(req, resp, **kwargs):
     yield from picoweb.start_response(resp)
-    yield from resp.awrite("This is a fan controlling system")
-
-
-def config(req, resp, **kwargs):
-    yield from picoweb.start_response(resp)
     with open('index.html') as f:
         yield from resp.awrite(f.read())
 
 
-def temp(req, resp, **kwargs):
+def status(req, resp, **kwargs):
     temp_obj = kwargs.get('temp_obj', None)
+    fan_obj = kwargs.get('fan_obj', None)
     yield from picoweb.start_response(resp)
-    yield from resp.awrite('temp: {}'.format(temp_obj.read()))
+    return_data = {'temp': temp_obj.read(),
+                   'status': fan_obj.state_text}
+    print(req)
+    yield from resp.awrite(ujson.dumps(return_data))
+
+
+def save(req, resp, **kwargs):
+    yield from picoweb.start_response(resp)
+    print(req)
+    yield from resp.awrite('')
 
 
 async def update_temp(_temp_obj, refresh_interval=4):
@@ -218,14 +228,14 @@ def start_fan_control():
     loop = asyncio.get_event_loop()
     temp_obj = MyTemp()
     button_obj = MyButton(event_loop=loop)
-    MyFan(button=button_obj, temp=temp_obj, event_loop=loop)
+    fan_obj = MyFan(button=button_obj, temp=temp_obj, event_loop=loop)
 
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger(__name__)
 
-    app = MyPicoWeb(__name__, temp_obj=temp_obj)
-    app.add_url_rule('/temp', temp)
-    app.add_url_rule('/config', config)
+    app = MyPicoWeb(__name__, temp_obj=temp_obj, button_obj=button_obj, fan_obj=fan_obj)
+    app.add_url_rule('/save', save)
+    app.add_url_rule('/status', status)
     app.add_url_rule('/', index)
 
     loop.create_task(update_temp(temp_obj))
