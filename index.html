@@ -27,12 +27,7 @@
         margin: 0 auto 0 auto;
         padding: 10px 0px 10px 0px;
       }
-      input[type='text'],
-      input[type='password'],
-      input[type='mqtt_broker'],
-      input[type='mqtt_user'],
-      input[type='mqtt_password'],
-      input[type='temp_threshold'] {
+      input[type='text_input'] {
         background: #ecf0f1;
         border: #ccc 1px solid;
         border-bottom: #ccc 2px solid;
@@ -85,11 +80,11 @@
     <form action="/save" method="get" class="box">
       <h1>Configuration</h1>
 
-      <input type="text" placeholder="My WiFi SSID" name="ssid" required />
+      <input type="text_input" placeholder="My WiFi SSID" name="ssid" required />
       <br />
 
       <input
-        type="password"
+        type="text_input"
         placeholder="WiFi Password"
         name="password"
         required
@@ -97,29 +92,34 @@
       <br />
 
       <input
-        type="mqtt_broker"
+        type="text_input"
         placeholder="MQTT broker (empty=disabled)"
         name="mqtt_broker"
       />
       <br />
 
       <input
-        type="mqtt_user"
+        type="text_input"
         placeholder="MQTT user"
         name="mqtt_user"
       />
       <br />
 
       <input
-        type="mqtt_password"
+        type="text_input"
         placeholder="MQTT password"
         name="mqtt_password"
       />
       <br />
       <input
-        type="temp_threshold"
+        type="text_input"
         placeholder="Temp. threshold"
         name="temp_threshold"
+      />
+      <input
+        type="text_input"
+        placeholder="Seconds override manual"
+        name="override_secs"
       />
       <br />
 

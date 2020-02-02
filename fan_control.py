@@ -1,11 +1,12 @@
 import logging
-import mypicoweb
 import uasyncio as asyncio
 import dht
 from machine import Pin
-from ucollections import deque
 import ujson
-from mypicoweb import MyPicoWeb
+import mypicoweb
+from mybutton import MyButton
+import utime
+from myconfig import get_config
 
 
 def web_index(req, resp, **kwargs):
@@ -23,18 +24,22 @@ def web_status(req, resp, **kwargs):
     temp_obj = kwargs.get('temp_obj', None)
     fan_obj = kwargs.get('fan_obj', None)
     yield from mypicoweb.start_response(resp)
-    print('parseing query param')
+    print('parsing query param')
     params = req.qs
-    if params == 'state=on':
-        print('turn on fan')
-        fan_obj.switch_state(True)
-    elif params == 'state=off':
-        print('turn on fan')
-        fan_obj.switch_state(False)
+    print(params)
+    command, value = params.split('=') if len(params) > 1 else (None, None)
+    if command == 'state':
+        fan_obj.pause_temp_check()
+        print('turning fan {}'.format(value))
+        s = {'on': True, 'off': False}.get(value, None)
+        fan_obj.switch_state(s)
     return_data = {'temp': temp_obj.read(), 'status': fan_obj.state_text, 'params': str(params)}
     print(req)
     yield from resp.awrite(ujson.dumps(return_data))
 
+
+def web_getconfig(req, resp, **kwargs):
+    from myconfig import get_config
 
 def web_save(req, resp, **kwargs):
     yield from mypicoweb.start_response(resp)
@@ -56,13 +61,15 @@ class MyTemp:
 
 
 class MyFan:
-    def __init__(self, fan_pin=12, led_pin=2, button=None, temp=None, event_loop=None, trigger_temp=28):
+    def __init__(self, fan_pin=12, led_pin=2, button=None, temp=None, event_loop=None, trigger_temp=28, override_secs=120):
         self.fan = Pin(fan_pin, Pin.OUT)
         self.led = Pin(led_pin, Pin.OUT)
         self.led(True)
         self.button = button
         self.state = False
         self.trigger_temp = trigger_temp
+        self.override_secs = override_secs
+        self.last_override = 0
         self.temp = temp
         if event_loop:
             event_loop.create_task(self.check_changes())
@@ -84,14 +91,24 @@ class MyFan:
         self.led(not self.state)
         self.fan(self.state)
 
-    async def check_changes(self, sleep_ms=100, button_time_secs=30):
+    def pause_temp_check(self):
+        print('update last override')
+        self.last_override = utime.time()
+
+    @property
+    def in_pause_mode(self):
+        return self.last_override > 0 and utime.time() <= self.last_override + self.override_secs
+
+    async def check_changes(self, sleep_ms=100, button_time_secs=5):
         while True:
             await asyncio.sleep_ms(sleep_ms)
             if self.button.pressed is True:
-                print('switching state to {} due to button pressed, wait {} secs'.format(not self.state, button_time_secs))
+                self.pause_temp_check()
+                print('switching state to {} due to button pressed, '
+                      'waiting {} secs for further press'.format(not self.state, button_time_secs))
                 self.switch_state()
                 await asyncio.sleep(button_time_secs)
-            if self.temp:
+            if self.temp and not self.in_pause_mode:
                 current_temp = self.temp.read()
                 if current_temp >= self.trigger_temp and self.on is False:
                     print('turning on fan due to temp above {}'.format(self.trigger_temp))
@@ -99,30 +116,6 @@ class MyFan:
                 elif current_temp < self.trigger_temp and self.on is True:
                     print('turning off fan due to temp below {}'.format(self.trigger_temp))
                     self.switch_state(False)
-
-
-class MyButton:
-    def __init__(self, button_pin=14, event_loop=None):
-        self.pressed_queue = deque((), 10)
-        self.button_pin = button_pin
-        if event_loop:
-            event_loop.create_task(self.check_presses())
-
-    async def check_presses(self, sleep_ms=100, bounce_ms=1000):
-        while True:
-            await asyncio.sleep_ms(sleep_ms)
-            p = Pin(self.button_pin, Pin.IN, Pin.PULL_UP)
-            if bool(p.value()) is False:
-                self.pressed_queue.append(True)
-                print('button pressed')
-                await asyncio.sleep_ms(bounce_ms)
-
-    @property
-    def pressed(self):
-        try:
-            return self.pressed_queue.popleft()
-        except (ValueError, IndexError):
-            return False
 
 
 async def update_temp(_temp_obj, refresh_interval=4):
@@ -146,7 +139,7 @@ def start_fan_control():
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger(__name__)
 
-    app = MyPicoWeb(__name__, temp_obj=temp_obj, button_obj=button_obj, fan_obj=fan_obj)
+    app = mypicoweb.MyPicoWeb(__name__, temp_obj=temp_obj, button_obj=button_obj, fan_obj=fan_obj)
     app.add_url_rule('/save', web_save)
     app.add_url_rule('/status', web_status)
     app.add_url_rule('/', web_index)
