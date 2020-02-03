@@ -10,7 +10,7 @@ class MyButton:
         if event_loop:
             event_loop.create_task(self.check_presses())
 
-    async def check_presses(self, sleep_ms=100, bounce_ms=1000):
+    async def check_presses(self, sleep_ms=300, bounce_ms=1000):
         while True:
             await asyncio.sleep_ms(sleep_ms)
             p = Pin(self.button_pin, Pin.IN, Pin.PULL_UP)

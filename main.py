@@ -2,6 +2,7 @@
 import fan_control
 from mywifi import stop_all_wifi, start_ap, wifi_connect
 from myconfig import get_config
+import gc
 
 default_config = {'essid': 'MYWIFI',
                   'password': 'MYPASSWORD',
@@ -19,6 +20,8 @@ def s():
     wifi_connected = wifi_connect(c['essid'], c['password'])
     if not wifi_connected:
         start_ap()
+    del c
+    gc.collect()
     fan_control.start_fan_control()
 
 

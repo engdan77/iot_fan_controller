@@ -6,27 +6,23 @@ import ujson
 import mypicoweb
 from mybutton import MyButton
 import utime
-from myconfig import get_config
+import gc
 
 
 def web_index(req, resp, **kwargs):
     yield from mypicoweb.start_response(resp)
     with open('index.html') as f:
         yield from resp.awrite(f.read())
+    gc.collect()
 
 
 def web_status(req, resp, **kwargs):
-    fan_obj = kwargs.get('fan_obj', None)
-    print('*'*30)
-    print(req)
-    print(resp)
-    print(kwargs)
+    gc.collect()
     temp_obj = kwargs.get('temp_obj', None)
     fan_obj = kwargs.get('fan_obj', None)
     yield from mypicoweb.start_response(resp)
-    print('parsing query param')
     params = req.qs
-    print(params)
+    print('parsing query param {}'.format(params))
     command, value = params.split('=') if len(params) > 1 else (None, None)
     if command == 'state':
         fan_obj.pause_temp_check()
@@ -34,12 +30,12 @@ def web_status(req, resp, **kwargs):
         s = {'on': True, 'off': False}.get(value, None)
         fan_obj.switch_state(s)
     return_data = {'temp': temp_obj.read(), 'status': fan_obj.state_text, 'params': str(params)}
-    print(req)
     yield from resp.awrite(ujson.dumps(return_data))
 
 
 def web_getconfig(req, resp, **kwargs):
-    from myconfig import get_config
+    pass
+
 
 def web_save(req, resp, **kwargs):
     yield from mypicoweb.start_response(resp)
@@ -99,7 +95,7 @@ class MyFan:
     def in_pause_mode(self):
         return self.last_override > 0 and utime.time() <= self.last_override + self.override_secs
 
-    async def check_changes(self, sleep_ms=100, button_time_secs=5):
+    async def check_changes(self, sleep_ms=500, button_time_secs=1):
         while True:
             await asyncio.sleep_ms(sleep_ms)
             if self.button.pressed is True:
@@ -144,5 +140,6 @@ def start_fan_control():
     app.add_url_rule('/status', web_status)
     app.add_url_rule('/', web_index)
 
+    gc.collect()
     loop.create_task(update_temp(temp_obj))
     app.run(host="0.0.0.0", port=80, log=log)
