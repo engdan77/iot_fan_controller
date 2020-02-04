@@ -24,19 +24,21 @@ def wifi_connect(essid, password):
     sta_if = network.WLAN(network.STA_IF)
     sta_if.active(False)
     if not sta_if.isconnected():
-        print('connecting to network...')
         sta_if.active(True)
         sta_if.connect(essid, password)
-        for i in range(10):
+        print('connecting to network..., pause 3 sec')
+        utime.sleep(3)
+        for i in range(1, 10):
             print('attempt {}'.format(i))
-            utime.sleep_ms(500)
+            utime.sleep(1)
             if sta_if.isconnected():
                 connected = True
                 break
-        sta_if.active(False)
+        if not connected:
+            sta_if.active(False)
     else:
         connected = True
     if connected:
-        print('WIFI mode started')
+        utime.sleep(1)
         print('network config:', sta_if.ifconfig())
     return connected
