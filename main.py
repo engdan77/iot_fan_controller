@@ -6,11 +6,13 @@ import gc
 
 default_config = {'essid': 'MYWIFI',
                   'password': 'MYPASSWORD',
+                  'mqtt_enabled': 'true',
                   'mqtt_broker': '127.0.0.1',
-                  'mqtt_username': 'user',
+                  'mqtt_topic': '/fan_control/temp',
+                  'mqtt_username': 'username',
                   'mqtt_password': 'password',
                   'trigger_temp': '28',
-                  'override_secs': 10}
+                  'override_secs': '10'}
 
 
 def s():
@@ -20,9 +22,9 @@ def s():
     wifi_connected = wifi_connect(c['essid'], c['password'])
     if not wifi_connected:
         start_ap()
+    fan_control.start_fan_control(c)
     del c
     gc.collect()
-    fan_control.start_fan_control()
 
 
 def main():
