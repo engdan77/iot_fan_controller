@@ -1,4 +1,4 @@
-<html>
+<html xmlns="http://www.w3.org/1999/html">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -17,8 +17,76 @@
         color: #fff;
       }
       h1 {
+        font-size: 2em;
+        color: #525252;
+      }
+      h2 {
         font-size: 1.5em;
         color: #525252;
+      }
+      .my_centered {
+        position: relative;
+        top: 20px;
+        right: 30px;
+        font-size: 1.0em;
+        color: #525252;
+      }
+      .my_left {
+        position: center;
+        top: 20px;
+        font-size: 1.0em;
+        color: #525252;
+      }
+      .switch {
+        position: relative;
+        display: inline-block;
+        right: 40px;
+        width: 60px;
+        height: 34px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+      }
+      input:checked + .slider {
+        background-color: #2196F3;
+      }
+      input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+      }
+      input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+      }
+      .slider.round {
+        border-radius: 34px;
+      }
+      .slider.round:before {
+        border-radius: 50%;
       }
       .box {
         background: white;
@@ -78,9 +146,10 @@
   </head>
   <body>
     <form action="/save" method="get" class="box">
-      <h1>Configuration</h1>
+      <h1>Fan Control</h1>
 
-      <input type="text_input" placeholder="My WiFi SSID" name="ssid" required />
+      <h4>Wifi settings</h4>
+      <input type="text_input" placeholder="My WiFi SSID" name="essid" required />
       <br />
 
       <input
@@ -91,17 +160,32 @@
       />
       <br />
 
+      <h4>MQTT</h4>
+      <label class="switch">
+      <input type="checkbox" name="mqtt_enabled">
+      <span class="slider round"></span>
+      </label>
+      <span class="my_centered"> MQTT Enabled</span>
+      <br />
+
       <input
         type="text_input"
-        placeholder="MQTT broker (empty=disabled)"
+        placeholder="MQTT broker"
         name="mqtt_broker"
       />
       <br />
 
       <input
         type="text_input"
-        placeholder="MQTT user"
-        name="mqtt_user"
+        placeholder="MQTT topic"
+        name="mqtt_topic"
+      />
+      <br />
+
+      <input
+        type="text_input"
+        placeholder="MQTT username"
+        name="mqtt_username"
       />
       <br />
 
@@ -111,33 +195,40 @@
         name="mqtt_password"
       />
       <br />
+      <h4>Other settings</h4>
+      <span class="my_left">Trigger temp</span>
+      <br />
       <input
         type="text_input"
         placeholder="Temp. threshold"
-        name="temp_threshold"
+        name="trigger_temp"
       />
+      <br />
+      <br />
+      <span class="my_left">Override time (secs)</span>
+      <br />
       <input
         type="text_input"
         placeholder="Seconds override manual"
         name="override_secs"
       />
       <br />
-
       <br />
-
       <button type="submit" class="btn">Save</button>
     </form>
     <br />
 
     <form class="box">
-      <h1>Fan Control</h1>
+      <h2>State</h2>
       <button id="turn_on" class="btn_on">On</button><button id="turn_off" class="btn_off">Off</button>
       <br />
       Status: <div id="fan_status"></div>
     </form>
       <br />
+
     <form class="box">
-      Current temp: <div id="temp"></div>°C
+      <h2>Temperature</h2>
+      Current: <div id="temp"></div>°C
     </form>
   </body>
 
@@ -146,8 +237,23 @@
 
   $( document ).ready(function() {
   var data = {};
-  $.get( "status", data, success, "json" );
+  $.get( "getconfig", data, getconfig, "json" );
   });
+
+    function getconfig( c ) {
+      if (c.mqtt_enabled == true) {
+        $('input[name="mqtt_enabled"]').trigger("click");
+      }
+
+      $('input[name="essid"]').val(c.essid);
+      $('input[name="password"]').val(c.password);
+      $('input[name="mqtt_broker"]').val(c.mqtt_broker);
+      $('input[name="mqtt_topic"]').val(c.mqtt_topic);
+      $('input[name="mqtt_username"]').val(c.mqtt_username);
+      $('input[name="mqtt_password"]').val(c.mqtt_password);
+      $('input[name="trigger_temp"]').val(c.trigger_temp);
+      $('input[name="override_secs"]').val(c.override_secs);
+    }
 
   function success( responseData ) {
       var status = responseData.status;
@@ -167,6 +273,14 @@
       var data = { state: "off"};
       $.get( "status", data, success, "json" );
     } )});
+
+        $("#mqtt_enabled").on('change', function() {
+      if ($(this).attr('checked')) {
+        $(this).val('true');
+    }
+    else {
+      $(this).val('false');
+    }});
   </script>
 
 </html>
