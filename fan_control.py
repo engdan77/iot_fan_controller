@@ -1,12 +1,15 @@
 import logging
 import uasyncio as asyncio
 import dht
-from machine import Pin
+from machine import Pin, reset
 import ujson
 import mypicoweb
 from mybutton import MyButton
 import utime
 import gc
+from myconfig import get_config, save_config
+from mymqtt import publish
+from mywatchdog import WDT
 
 
 def web_index(req, resp, **kwargs):
@@ -33,14 +36,60 @@ def web_status(req, resp, **kwargs):
     yield from resp.awrite(ujson.dumps(return_data))
 
 
+def unquote(string):
+    """unquote('abc%20def') -> b'abc def'."""
+    _hextobyte_cache = {}
+    # Note: strings are encoded as UTF-8. This is only an issue if it contains
+    # unescaped non-ASCII characters, which URIs should not.
+    if not string:
+        return b''
+    if isinstance(string, str):
+        string = string.encode('utf-8')
+    bits = string.split(b'%')
+    if len(bits) == 1:
+        return string
+    res = [bits[0]]
+    append = res.append
+    for item in bits[1:]:
+        try:
+            code = item[:2]
+            char = _hextobyte_cache.get(code)
+            if char is None:
+                char = _hextobyte_cache[code] = bytes([int(code, 16)])
+            append(char)
+            append(item[2:])
+        except KeyError:
+            append(b'%')
+            append(item)
+    return b''.join(res)
+
+
+def query_params_to_dict(inputParams):
+    params = {x[0]: unquote(x[1])
+              for x in
+              [x.split("=") for x in inputParams.split("&")]
+              }
+    return params
+
+
 def web_getconfig(req, resp, **kwargs):
-    pass
+    default_config = kwargs.get('config', None)
+    gc.collect()
+    yield from mypicoweb.start_response(resp)
+    c = get_config(default_config)
+    print('config loaded {}'.format(c))
+    j = ujson.dumps(c)
+    yield from resp.awrite(j)
 
 
 def web_save(req, resp, **kwargs):
     yield from mypicoweb.start_response(resp)
-    print(req)
-    yield from resp.awrite('')
+    params = query_params_to_dict(req.qs)
+    mqtt_enabled = 'mqtt_enabled' in params
+    params['mqtt_enabled'] = mqtt_enabled
+    print('saving configuration {}'.format(params))
+    save_config(params)
+    yield from resp.awrite('{"success": true}')
 
 
 class MyTemp:
@@ -57,16 +106,31 @@ class MyTemp:
 
 
 class MyFan:
-    def __init__(self, fan_pin=12, led_pin=2, button=None, temp=None, event_loop=None, trigger_temp=28, override_secs=120):
+    def __init__(self,
+                 fan_pin=12,
+                 led_pin=2,
+                 button=None,
+                 temp=None,
+                 event_loop=None,
+                 config=None,
+                 wdt=None):
+        self.wdt = wdt
         self.fan = Pin(fan_pin, Pin.OUT)
         self.led = Pin(led_pin, Pin.OUT)
         self.led(True)
         self.button = button
         self.state = False
-        self.trigger_temp = trigger_temp
-        self.override_secs = override_secs
+        self.mqtt_enabled = config.get('mqtt_enabled', False)
+        self.mqtt_broker = config.get('mqtt_broker', None)
+        self.mqtt_topic = config.get('/fan_control/temp')
+        self.mqtt_username = config.get('mqtt_username', None)
+        self.mqtt_password = config.get('mqtt_password', None)
+        self.trigger_temp = int(config.get('trigger_temp', 30))
+        self.override_secs = int(config.get('override_secs', 60))
         self.last_override = 0
         self.temp = temp
+        self.last_major_temp = 0
+        self.minor_change = 0.5
         if event_loop:
             event_loop.create_task(self.check_changes())
 
@@ -104,14 +168,28 @@ class MyFan:
                       'waiting {} secs for further press'.format(not self.state, button_time_secs))
                 self.switch_state()
                 await asyncio.sleep(button_time_secs)
+
+            current_temp = self.temp.read()
+            if abs(current_temp - self.last_major_temp) >= self.minor_change:
+                self.last_major_temp = current_temp
+                if self.mqtt_enabled:
+                    # publish MQTT if enabled
+                    publish('fan_control_client',
+                            self.mqtt_broker,
+                            self.mqtt_topic,
+                            current_temp,
+                            self.mqtt_username,
+                            self.mqtt_password)
+
             if self.temp and not self.in_pause_mode:
-                current_temp = self.temp.read()
                 if current_temp >= self.trigger_temp and self.on is False:
                     print('turning on fan due to temp above {}'.format(self.trigger_temp))
                     self.switch_state(True)
                 elif current_temp < self.trigger_temp and self.on is True:
                     print('turning off fan due to temp below {}'.format(self.trigger_temp))
                     self.switch_state(False)
+            if self.wdt:
+                self.wdt.feed()
 
 
 async def update_temp(_temp_obj, refresh_interval=4):
@@ -126,11 +204,12 @@ async def update_temp(_temp_obj, refresh_interval=4):
         print('Updating temp {} current temp {}'.format(count, _temp_obj.temp))
 
 
-def start_fan_control():
+def start_fan_control(config):
+    wdt = WDT(timeout=30)
     loop = asyncio.get_event_loop()
     temp_obj = MyTemp()
     button_obj = MyButton(event_loop=loop)
-    fan_obj = MyFan(button=button_obj, temp=temp_obj, event_loop=loop)
+    fan_obj = MyFan(button=button_obj, temp=temp_obj, event_loop=loop, config=config, wdt=wdt)
 
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger(__name__)
@@ -138,6 +217,7 @@ def start_fan_control():
     app = mypicoweb.MyPicoWeb(__name__, temp_obj=temp_obj, button_obj=button_obj, fan_obj=fan_obj)
     app.add_url_rule('/save', web_save)
     app.add_url_rule('/status', web_status)
+    app.add_url_rule('/getconfig', web_getconfig)
     app.add_url_rule('/', web_index)
 
     gc.collect()
