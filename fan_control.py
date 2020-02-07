@@ -10,12 +10,20 @@ import gc
 from myconfig import get_config, save_config
 from mymqtt import publish
 from mywatchdog import WDT
+import jquery
 
 
 def web_index(req, resp, **kwargs):
     yield from mypicoweb.start_response(resp)
     with open('index.html') as f:
         yield from resp.awrite(f.read())
+    gc.collect()
+
+
+def web_jquery(req, resp, **kwargs):
+    gc.collect()
+    yield from mypicoweb.start_response(resp)
+    yield from resp.awrite(jquery.data())
     gc.collect()
 
 
@@ -89,7 +97,12 @@ def web_save(req, resp, **kwargs):
     params['mqtt_enabled'] = mqtt_enabled
     print('saving configuration {}'.format(params))
     save_config(params)
-    yield from resp.awrite('{"success": true}')
+    yield from resp.awrite('''<html>
+    <body style="background-color:blue;">
+    <centrer><p>Configuration saved, rebooting...</p></center>
+    </body>
+    </html>''')
+    reset()
 
 
 class MyTemp:
@@ -122,7 +135,7 @@ class MyFan:
         self.state = False
         self.mqtt_enabled = config.get('mqtt_enabled', False)
         self.mqtt_broker = config.get('mqtt_broker', None)
-        self.mqtt_topic = config.get('/fan_control/temp')
+        self.mqtt_topic = config.get('mqtt_topic').encode()
         self.mqtt_username = config.get('mqtt_username', None)
         self.mqtt_password = config.get('mqtt_password', None)
         self.trigger_temp = int(config.get('trigger_temp', 30))
@@ -133,6 +146,14 @@ class MyFan:
         self.minor_change = 0.5
         if event_loop:
             event_loop.create_task(self.check_changes())
+        if self.mqtt_enabled:
+            # publish MQTT if enabled
+            publish('fan_control_client',
+                    self.mqtt_broker,
+                    '/notification/message',
+                    'fan_control_started',
+                    self.mqtt_username,
+                    self.mqtt_password)
 
     @property
     def on(self):
@@ -174,7 +195,8 @@ class MyFan:
                 self.last_major_temp = current_temp
                 if self.mqtt_enabled:
                     # publish MQTT if enabled
-                    publish('fan_control_client',
+                    print('publishing {} to broker {} topic {}'.format(current_temp, self.mqtt_broker, self.mqtt_topic))
+                    publish(b'fan_control_client',
                             self.mqtt_broker,
                             self.mqtt_topic,
                             current_temp,
@@ -218,6 +240,7 @@ def start_fan_control(config):
     app.add_url_rule('/save', web_save)
     app.add_url_rule('/status', web_status)
     app.add_url_rule('/getconfig', web_getconfig)
+    app.add_url_rule('/jquery.min.js', web_jquery)
     app.add_url_rule('/', web_index)
 
     gc.collect()

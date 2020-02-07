@@ -232,12 +232,24 @@
     </form>
   </body>
 
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="/jquery.min.js"></script>
   <script>
 
   $( document ).ready(function() {
   var data = {};
   $.get( "getconfig", data, getconfig, "json" );
+  function request() {
+          $.ajax({
+            url: "status",
+            dataType: "json",
+            cache: false,
+            success: function(data) {
+                $('#fan_status').html(data.status);
+                $('#temp').html(data.temp);
+            }
+        });
+    }
+    setTimeout(request, 2000);
   });
 
     function getconfig( c ) {
