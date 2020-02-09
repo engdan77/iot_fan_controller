@@ -7,7 +7,7 @@ import utime
 import ure as re
 import uerrno
 import uasyncio as asyncio
-import pkg_resources
+from src import pkg_resources
 
 from .utils import parse_qs
 
