@@ -1,6 +1,7 @@
 import utime
-from src import picoweb
-from src.picoweb import HTTPRequest, start_response
+
+from picoweb
+from picoweb import HTTPRequest, start_response
 
 
 class MyPicoWeb(picoweb.WebApp):

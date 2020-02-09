@@ -4,18 +4,18 @@ __license__ = "MIT"
 __version__ = "1.0.1"
 __email__ = "daniel@engvalls.eu"
 
+import gc
+import logging
+import mypicoweb
 import uasyncio as asyncio
 from mybutton import MyButton
-import gc
-from mywatchdog import WDT
-import mypicoweb
-import logging
-from mytemp import update_temp
-from mytemp import MyTemp
-from myfan import MyFan
-from webresources import web_save, web_status, web_getconfig, web_jquery, web_index
-from mywifi import stop_all_wifi, start_ap, wifi_connect
 from myconfig import get_config
+from myfan import MyFan
+from mytemp import MyTemp
+from mytemp import update_temp
+from mywatchdog import WDT
+from mywifi import stop_all_wifi, start_ap, wifi_connect
+from webresources import web_save, web_status, web_getconfig, web_jquery, web_index
 
 default_config = {'essid': 'MYWIFI',
                   'password': 'MYPASSWORD',

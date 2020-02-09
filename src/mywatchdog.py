@@ -1,6 +1,8 @@
 import gc
-import machine
 from sys import platform
+
+import machine
+
 gc.collect()
 
 

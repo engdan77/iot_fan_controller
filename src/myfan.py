@@ -1,7 +1,7 @@
-from machine import Pin
-from mymqtt import publish
 import utime
+from machine import Pin
 import uasyncio as asyncio
+from mymqtt import publish
 
 
 class MyFan:

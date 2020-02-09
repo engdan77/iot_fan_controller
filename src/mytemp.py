@@ -1,5 +1,6 @@
-from machine import Pin
 import dht
+from machine import Pin
+
 
 class MyTemp:
     def __init__(self, pin=4):

@@ -1,11 +1,11 @@
-import mypicoweb
-import index
 import gc
-import jquery
 import ujson
+from machine import reset
+import index
+import jquery
+import mypicoweb
 from myconfig import get_config, save_config
 from urltools import query_params_to_dict
-from machine import reset
 
 
 def web_index(req, resp, **kwargs):

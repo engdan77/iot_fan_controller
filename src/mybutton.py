@@ -1,6 +1,6 @@
+from machine import Pin
 from ucollections import deque
 import uasyncio as asyncio
-from machine import Pin
 
 
 class MyButton:
