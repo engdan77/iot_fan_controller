@@ -88,6 +88,7 @@ Here `${SERIAL_PORT}` is the path to the serial device on which the board is con
 
 ~~~plantuml
 ```plantuml
+@startuml
 class MyButton {
   pressed_queue
   button_pin
@@ -169,6 +170,7 @@ dht.DHT22 <-- MyTemp : dht.DHT22
 Pin <-- MyFan : Pin
 utime.time <-- MyFan : utime.time
 machine.Timer <-- WDT : machine.Timer
+@enduml
 ```
 ~~~
 
