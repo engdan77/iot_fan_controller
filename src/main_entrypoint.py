@@ -8,16 +8,20 @@ import gc
 import logging
 import mypicoweb
 import uasyncio as asyncio
-from mybutton import MyButton
-from myconfig import get_config
+from mybutton import MyButton, blocking_count_clicks
+from myconfig import get_config, save_config
 from myfan import MyFan
 from mytemp import MyTemp
 from mytemp import update_temp
 from mywatchdog import WDT
+from myled import blink_int
 from mywifi import stop_all_wifi, start_ap, wifi_connect
 from webresources import web_save, web_status, web_getconfig, web_jquery, web_index
+import webrepl
 
-default_config = {'essid': 'MYWIFI',
+
+WEBREPL_PASSWORD = 'fan_control'
+DEFAULT_CONFIG = {'essid': 'MYWIFI',
                   'password': 'MYPASSWORD',
                   'mqtt_enabled': 'true',
                   'mqtt_broker': '127.0.0.1',
@@ -51,12 +55,23 @@ def start_fan_control(config):
 
 
 def main():
+    # check initially how many click
+    clicks = blocking_count_clicks(timeout=5)
+    if clicks == 1:
+        print('reset configuration')
+        blink_int(on_time=1000)
+        save_config(DEFAULT_CONFIG)
     stop_all_wifi()
-    c = get_config(default_config)
+    c = get_config(DEFAULT_CONFIG)
     print('config loaded {}'.format(c))
     wifi_connected = wifi_connect(c['essid'], c['password'])
     if not wifi_connected:
         start_ap()
-    start_fan_control(c)
-    del c
-    gc.collect()
+    if clicks == 2:
+        print('starting webrepl using password {}'.format(WEBREPL_PASSWORD))
+        blink_int(count=10, on_time=200)
+        webrepl.start(8266, password='fan_control')
+    else:
+        start_fan_control(c)
+        del c
+        gc.collect()
