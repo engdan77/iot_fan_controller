@@ -10,12 +10,14 @@ def get_config(input_default_config=None, config_file='config.json'):
             open(config_file, 'w').write(ujson.dumps(c))
         else:
             print('No default config given')
+    c = {k: {'true': True, 'false': False}.get(v, v) for k, v in c.items()}
     return c
 
 
 def save_config(input_config, config_file='config.json'):
     if input_config:
         c = input_config
-        open(config_file, 'w').write(ujson.dumps(c))
+        with open(config_file, 'w') as f:
+            f.write(ujson.dumps(c))
     else:
         print('No default config given')
