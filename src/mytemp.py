@@ -1,5 +1,6 @@
 import dht
 from machine import Pin
+import uasyncio as asyncio
 
 
 class MyTemp:
