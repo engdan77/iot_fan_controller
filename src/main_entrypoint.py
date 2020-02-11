@@ -23,7 +23,7 @@ import webrepl
 WEBREPL_PASSWORD = 'fan_control'
 DEFAULT_CONFIG = {'essid': 'MYWIFI',
                   'password': 'MYPASSWORD',
-                  'mqtt_enabled': 'true',
+                  'mqtt_enabled': 'false',
                   'mqtt_broker': '127.0.0.1',
                   'mqtt_topic': '/fan_control/temp',
                   'mqtt_username': 'username',
@@ -70,7 +70,7 @@ def main():
     if clicks == 2:
         print('starting webrepl using password {}'.format(WEBREPL_PASSWORD))
         blink_int(count=10, on_time=200)
-        webrepl.start(8266, password='fan_control')
+        webrepl.start_foreground()
     else:
         start_fan_control(c)
         del c
