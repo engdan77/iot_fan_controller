@@ -1,6 +1,6 @@
 import utime
 
-from picoweb
+import picoweb
 from picoweb import HTTPRequest, start_response
 
 
@@ -107,3 +107,4 @@ class MyPicoWeb(picoweb.WebApp):
         print('req: {}'.format(req))
         print('resp: {}'.format(resp))
         print('exception: {}'.format(e))
+        yield
