@@ -25,11 +25,17 @@ ENV PATH=/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
 
 RUN cd micropython/mpy-cross && make
 
-RUN cd micropython/ports/esp8266 && make
+WORKDIR /micropython/ports/esp8266
+
+# Remove the current ones to save some space
+# RUN rm /micropython/ports/esp8266/modules/*
+# Remove bTree to save storage
+RUN sed -i.bak 's/MICROPY_PY_BTREE ?= 1/MICROPY_PY_BTREE ?= 0/' /micropython/ports/esp8266/Makefile
 
 # This is to allow 4MB flash on NodeMCUv3
 COPY extra/esp8266.ld /micropython/ports/esp8266/boards/esp8266.ld
 # This will add all new frozen modules, specifically _boot.py and inisetup.py defines entrypoint
-COPY src/*.py /micropython/ports/esp8266/modules
+COPY src/ /micropython/ports/esp8266/modules/
 
-WORKDIR /micropython/ports/esp8266
+RUN cd /micropython/ports/esp8266 && make
+
