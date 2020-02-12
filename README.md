@@ -220,7 +220,7 @@ Here `${SERIAL_PORT}` is the path to the serial device on which the board is con
 
 ## Special thanks to <a name="Thanks"></a>
 
-- Erik Wallebom for always helping with the electronic challenges
+- [Erik Wallebom](https://www.linkedin.com/in/erik-wallebom-240792178/) for always helping with the electronic challenges
 - Micropython comments in forums and good and tool like [data_to_micropython](https://github.com/peterhinch/micropython_data_to_py) by Peter Hinch
 - picoweb project by Paul Sakolovsky
 - Thanks to Paul Falstad for his [Circuit simulator](https://www.falstad.com/circuit/circuitjs.html)
