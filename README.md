@@ -95,14 +95,11 @@ The <u>first 5 seconds</u> you have an option to
 Unless you have configured the device you will find a essid fan_control, that you can connect to in which you can then go to http://192.168.4.1 and configure
 
 - Wifi configuration
-
 - MQTT, if you enable you need to configure broker etc
-
 - Trigger temp - the fan will start when above this temp ℃
-
 - Override time - this is the time in seconds the fan will either be off/on based on manual "button click" or through web-interface or REST-API
 
-  
+From this interface you can also read the current status of the fan and also the temperature.
 
 ## REST API <a name="RESTAPI"></a>
 
