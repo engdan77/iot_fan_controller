@@ -1,10 +1,25 @@
 # Internet-Of-Things Fan Controller
 
-[TOC]
+ Table of contents
+1. [The store and reflections behind this project](#Background)
+2. [Requirements](#Requirements)
+3. [Screenshots & video](#Screenshots)
+4. [Installation](#Installation)
+5. [How does it work?](#HowWorks)
+6. [REST API](#RestAPI)
+7. [Hardware design](#HardwareDesign)
+8. [Install using pre-built image](#InstallPreBuilt)
+9. [Build a frozen image from source and upload to ESP8266](#BuildFroze)
+    1. [Manually build binary image without upload](#ManualBuild)
+    2. [Flash and upload from within Container](#FlashContainer)
+    3. [Software design](#SoftwareDesign)
+4. [Special thanks tot](#Thanks)
+
+
 
 <img src="https://docs.zerynth.com/latest/_images/nodemcu3.jpg" style="zoom:50%;" />
 
-## The store and reflections behind this project
+## The store and reflections behind this project<a name="Background"></a>
 
 I noticed that my Macbook Pro became rather warm ♨️ while working and thought I would drill a hole and place fan under the surface of the laptop in the desk, I also remembered I both had a few [ESP8266](https://en.wikipedia.org/wiki/ESP8266) ([NodeMCU v3](https://docs.zerynth.com/latest/official/board.zerynth.nodemcu3/docs/index.html), let's call it [MCU](https://en.wikipedia.org/wiki/Microcontroller)) and [DHT22](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf) in box somewhere to be used in some context and this was a good oportunity get use of those allowing the temperature 🌡 of the surface to <u>control</u> whether that fan should be <u>on or off</u> to avoid unnecesary noise. I first begun thinking I could spend a moment soldering the this together with a [BC547](https://en.wikipedia.org/wiki/BC548) <u>transistor</u> to allow a 3.3v from [GPIO](https://en.wikipedia.org/wiki/General-purpose_input/output) of the MCU allow a higher voltage 12v to the <u>fan</u> ♒︎. Easy-peasy.. hmm, it might also be nice to have a <u>button</u> 🔘 to be able to force an on/off so let's put there as well to another GPIO... but before trying this on a breadboard, I got caught with some fundemental trap while verifying the transistor working, and thankfully to my electronic-genius to friend [Erik](https://www.linkedin.com/in/erik-wallebom-240792178) helped me get it right.. Now next soldering .. and a lot of cursing 🤬 - honestly it must be difficult finding anyone worse than me soldering but finally those pieces in its place and now to the part I find most fun, programming Micropython to do the work for me.
 With a few lines of code l just doing a quick while-loop to determine the temperatur and supply voltage to a GPIO was extremely easy, but it made me think bigger .. wouldn't it be nice to have a [RESTful-API](https://en.wikipedia.org/wiki/Representational_state_transfer) to allow me to control this fan through the <u>network</u> ...? Well, that in itself is easily done .. now, the challenge here is concurrency - we do need to assure we maintain the state of the button, and the temperature at the same time as we need to assure that the MCU also responds to incoming TCP/IP packets the code needs to following [asynchronous paradigm](https://en.wikipedia.org/wiki/Asynchrony_(computer_programming)) due to the fact that this is a single-core RISC-processor without support for threading. 🤔 Thankfully Micropython does support asyncio that makes this possible by async/await keywords. To save some efforts writing the web-framework I found this nice [picoweb](https://github.com/pfalcon/picoweb) to the rescue built as async. Now for readability I developed classes for button-presses and temperature with builtin subroutines checking their states, now exposing these to the web-framework there was a need to subclass a couple of methods to allow this.... now almost there ... now I was able to use REST to also check status and also suppled methods to update configuration... hmm .. 💡 wouldn't it be even nicer to build a [captive portal](https://en.wikipedia.org/wiki/Captive_portal) 📲 that many products does have to simplify configuration, I went into the rabbit-hole learning everything about captive portals that involves quite a lot of spoofing-mechanism not only involving HTTP, DHCP but also DNS-requests .. I found some projects built trying this out, but didn't find it stable enough so I left this *(for the time beeing at least)* with some better insight of this for the future. I did manage to supply code that allows the MCU to broadcast an essid "fan control" that allows one to access if the Wifi configured is not properly connected - this is allows me to alway configure the device if Wifi isn't connecting. The captive portal gave me the idea that it would also be nice to have some sort of a <u>web-configuration-interface</u>  for the initial configuration instead of hard-code configuration or send as REST (JSON) .. found some boilerplate for that but now I dug deeper into the world of CSS to make it look nice, [AJAX](https://en.wikipedia.org/wiki/Ajax_(programming)) using [JQuery](https://en.wikipedia.org/wiki/JQuery) to allow me to nicely have the web-interface with help of my REST-API in real-time (or near) present the state of the fan and what the current temperature is. With this interface you could also configure Wifi-settings ... now since I am happy user of the great [Home Assistant](https://github.com/home-assistant/home-assistant) (HASS) project where its heart of <u>home-automation</u> is an MQTT-broker, I also thought that I might as well add [MQTT](https://en.wikipedia.org/wiki/MQTT)-client to allow this MCU to inform my HASS what the temperature currently is... That's cool, that way I can e.g. have the home inform me by shouting to me through the SONOS-speakers when my laptop burns in flames 🔥 😜 .. Ok, cool .. now while squeezing more and more Python-code while the project grew successfully it finally more and more often got something like.. 
@@ -32,7 +47,7 @@ Now .. finally, with a binary-image of less than **610KB** uploaded to the MCU i
 
 All coded using async ... and now with the cost around a couple of € .. personally thinking that is rather awesome 😁👍🏻
 
-## Requirements
+## Requirements <a name="Requirements"></a>
 
 - Hardware 
   - [ESP8266](https://www.aliexpress.com/item/32965931916.html?spm=a2g0o.productlist.0.0.50497549rQyoZ3&algo_pvid=19b23545-dd7d-4224-96ae-2025f037db1d&algo_expid=19b23545-dd7d-4224-96ae-2025f037db1d-11&btsid=2716d10b-fd90-4166-a546-d6686758d8b3&ws_ab_test=searchweb0_0,searchweb201602_7,searchweb201603_53) (NodeMCUv3 recommend), now this should run on any MCU with support for GPIO such as big-brother ESP32
@@ -44,13 +59,13 @@ All coded using async ... and now with the cost around a couple of € .. person
   - Willingness to build following the sketch below 😉
 - A computer to upload the data from
 
-## Screenshots & video
+## Screenshots & video <a name="Screenshots"></a>
 
 <img src="https://i.ibb.co/BPQf9zM/fan-control-1.png" style="zoom:30%;" /><img src="https://i.ibb.co/0hgQ7WR/fan-control-2.png" style="zoom:30%;">
 
 You can also watch a short video [here](https://www.youtube.com/watch?v=IIoNmCwBS-A).
 
-## Installation
+## Installation <a name="Installation"></a>
 
 1. Connect the compents according to hardware design
 
@@ -69,8 +84,7 @@ esptool.py --port /dev/cu.usbserial-1410  --baud 115200 write_flash --flash_size
 ```
 
 
-
-## How does it work?
+## How does it work? <a name="HowWorks"></a>
 
 The <u>first 5 seconds</u> you have an option to
 
@@ -90,7 +104,7 @@ Unless you have configured the device you will find a essid fan_control, that yo
 
   
 
-## REST API
+## REST API <a name="RESTAPI"></a>
 
 ### Get status
 
@@ -138,7 +152,7 @@ Unless you have configured the device you will find a essid fan_control, that yo
 
 
 
-## Hardware design
+## Hardware design <a name="HardwareDesign"></a>
 
 This is a sketch that show how you would solder if you're using an NodeMCU.
 
@@ -146,7 +160,7 @@ This is a sketch that show how you would solder if you're using an NodeMCU.
 
 
 
-## Install using pre-built image
+## Install using pre-built image <a name="InstallPreBuilt"></a>
 
 You can basically download tool such as esptool to upload it using
 
@@ -162,9 +176,9 @@ esptool.py --port /dev/cu.usbserial-1410 --baud 115200 erase_flash
 
 
 
-## Build a frozen image from source and upload to ESP8266
+## Build a frozen image from source and upload to ESP8266 <a name="BuildFroze"></a>
 
-### Manually build binary image without upload
+### Manually build binary image without upload <a name="ManualBuild"></a>
 
 Build the docker image of the master branch. The custom Dockerfile will add src as frozen and update the entrypoint
 
@@ -186,7 +200,7 @@ The firmware can then be uploaded with the esptool
 
 Here `${SERIAL_PORT}` is the path to the serial device on which the board is connected.
 
-### Flash and upload from within Container
+### Flash and upload from within Container <a name="FlashContainer"></a>
 
 If you have built the image directly on your host (Linux), you also can flash your ESP directly by running a container from the image.
 I prefereably **erase** flash memory of ESP8266 before starting flash a new firmware
@@ -199,7 +213,7 @@ Here `${SERIAL_PORT}` is the path to the serial device on which the board is con
 
 
 
-## Software design
+## Software design <a name="SoftwareDesign"></a>
 
 ~~~plantuml
 ```plantuml
@@ -291,7 +305,7 @@ machine.Timer <-- WDT : machine.Timer
 
 
 
-## Special thanks to
+## Special thanks to <a name="Thanks"></a>
 
 - Erik Wallebom for always helping with the electronic challenges
 - Micropython comments in forums and good and tool like [data_to_micropython](https://github.com/peterhinch/micropython_data_to_py) by Peter Hinch
