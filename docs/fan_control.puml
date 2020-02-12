@@ -1,0 +1,80 @@
+class MyButton {
+  pressed_queue
+  button_pin
+  pressed
+  __init__()
+  check_presses()
+}
+
+class MyFan {
+  wdt
+  mqtt_enabled
+  state
+  trigger_temp
+  in_pause_mode
+  mqtt_password
+  minor_change
+  last_override
+  temp
+  state_text
+  mqtt_topic
+  led
+  mqtt_username
+  override_secs
+  fan
+  mqtt_broker
+  last_major_temp
+  on
+  button
+  __init__()
+  switch_state()
+  pause_temp_check()
+  check_changes()
+}
+
+class MyPicoWeb {
+  kwargs
+  __init__()
+  handle_exc()
+  _handle()
+}
+
+class MyTemp {
+  temp
+  d
+  __init__()
+  read()
+  refresh()
+}
+
+class WDT {
+  _timeout
+  _use_rtc_memory
+  _timer
+  _counter
+  __init__()
+  init()
+  deinit()
+  _wdt()
+  feed()
+}
+
+class picoweb.WebApp {
+}
+
+class dht.DHT22 {
+}
+
+class Pin {
+}
+
+class utime.time {
+}
+
+class machine.Timer {
+}
+
+MyPicoWeb --|> picoweb.WebApp 
+dht.DHT22 <-- MyTemp : dht.DHT22
+Pin <-- MyFan : Pin
+utime.time <-- MyFan : utime.time
