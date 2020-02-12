@@ -216,7 +216,7 @@ Here `${SERIAL_PORT}` is the path to the serial device on which the board is con
 ## Software design <a name="SoftwareDesign"></a>
 
 ![uncached image](http://www.plantuml.com/plantuml/proxy?cache=no&src=http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/engdan77/iot_fan_controller/master/docs/fan_control.puml)
-
+![uncached image](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/plantuml/plantuml-server/master/src/main/webapp/resource/test2diagrams.txt)
 
 
 ## Special thanks to <a name="Thanks"></a>
