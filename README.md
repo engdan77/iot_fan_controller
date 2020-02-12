@@ -99,7 +99,7 @@ Unless you have configured the device you will find a essid fan_control, that yo
 - Trigger temp - the fan will start when above this temp ℃
 - Override time - this is the time in seconds the fan will either be off/on based on manual "button click" or through web-interface or REST-API
 
-From this interface you can also read the current status of the fan and also the temperature.
+From this interface you can also read the current status of the fan (and also change) as well reading the current temperature.
 
 ## REST API <a name="RESTAPI"></a>
 
