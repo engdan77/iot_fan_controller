@@ -296,8 +296,6 @@ MyPicoWeb --|> picoweb.WebApp
 dht.DHT22 <-- MyTemp : dht.DHT22
 Pin <-- MyFan : Pin
 utime.time <-- MyFan : utime.time
-machine.Timer <-- WDT : machine.Timer
-@enduml
 ```
 
 
