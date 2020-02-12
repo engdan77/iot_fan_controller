@@ -13,11 +13,11 @@
     1. [Manually build binary image without upload](#ManualBuild)
     2. [Flash and upload from within Container](#FlashContainer)
     3. [Software design](#SoftwareDesign)
-4. [Special thanks tot](#Thanks)
+4. [Special thanks to](#Thanks)
 
 
 
-<img src="https://docs.zerynth.com/latest/_images/nodemcu3.jpg" style="zoom:50%;" />
+<img src="https://docs.zerynth.com/latest/_images/nodemcu3.jpg" width="80" />
 
 ## The store and reflections behind this project<a name="Background"></a>
 
@@ -61,7 +61,7 @@ All coded using async ... and now with the cost around a couple of € .. person
 
 ## Screenshots & video <a name="Screenshots"></a>
 
-<img src="https://i.ibb.co/BPQf9zM/fan-control-1.png" style="zoom:30%;" /><img src="https://i.ibb.co/0hgQ7WR/fan-control-2.png" style="zoom:30%;">
+<img src="https://i.ibb.co/BPQf9zM/fan-control-1.png" width="120" /><img src="https://i.ibb.co/0hgQ7WR/fan-control-2.png" width="120">
 
 You can also watch a short video [here](https://www.youtube.com/watch?v=IIoNmCwBS-A).
 
