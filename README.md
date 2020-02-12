@@ -17,7 +17,7 @@
 
 
 
-<img src="https://docs.zerynth.com/latest/_images/nodemcu3.jpg" width="80" />
+<img src="https://docs.zerynth.com/latest/_images/nodemcu3.jpg" width="200" />
 
 ## The store and reflections behind this project<a name="Background"></a>
 
@@ -61,7 +61,7 @@ All coded using async ... and now with the cost around a couple of € .. person
 
 ## Screenshots & video <a name="Screenshots"></a>
 
-<img src="https://i.ibb.co/BPQf9zM/fan-control-1.png" width="120" /><img src="https://i.ibb.co/0hgQ7WR/fan-control-2.png" width="120">
+<img src="https://i.ibb.co/BPQf9zM/fan-control-1.png" width="200" /><img src="https://i.ibb.co/0hgQ7WR/fan-control-2.png" width="200">
 
 You can also watch a short video [here](https://www.youtube.com/watch?v=IIoNmCwBS-A).
 
@@ -122,7 +122,7 @@ Unless you have configured the device you will find a essid fan_control, that yo
 
 ```json
 {
-    "state": 'off',
+    "state": "off",
     "temp": "27.3",
 }
 ```
@@ -143,7 +143,7 @@ Unless you have configured the device you will find a essid fan_control, that yo
 
 ```json
 {
-    "state": 'on',
+    "state": "on",
     "temp": "25.2",
 }
 ```
@@ -215,9 +215,7 @@ Here `${SERIAL_PORT}` is the path to the serial device on which the board is con
 
 ## Software design <a name="SoftwareDesign"></a>
 
-~~~plantuml
 ```plantuml
-@startuml
 class MyButton {
   pressed_queue
   button_pin
@@ -301,7 +299,6 @@ utime.time <-- MyFan : utime.time
 machine.Timer <-- WDT : machine.Timer
 @enduml
 ```
-~~~
 
 
 
