@@ -44,9 +44,99 @@ All coded using async ... and now with the cost around a couple of € .. person
   - Willingness to build following the sketch below 😉
 - A computer to upload the data from
 
+## Screenshots & video
+
+<img src="https://i.ibb.co/BPQf9zM/fan-control-1.png" style="zoom:30%;" /><img src="https://i.ibb.co/0hgQ7WR/fan-control-2.png" style="zoom:30%;">
+
+You can also watch a short video [here](https://www.youtube.com/watch?v=IIoNmCwBS-A).
+
+## Installation
+
+1. Connect the compents according to hardware design
+
+2. Install esptool by [this](https://randomnerdtutorials.com/flashing-micropython-firmware-esptool-py-esp32-esp8266/) instruction if you haven't or have other software doing the same
+
+3. Clone the repository
+
+```bash
+git clone xxxxx
+```
+
+4. Upload the firmware, or you like to compile the firmware yourself follow the instruction further down
+
+```bash
+esptool.py --port /dev/cu.usbserial-1410  --baud 115200 write_flash --flash_size=detect 0 iot_fan_controller/dist/esp8266/firmware-fan-control.bin
+```
+
+
+
 ## How does it work?
 
-When
+The <u>first 5 seconds</u> you have an option to
+
+- click button once - factory default the device
+- click button twice - the device will start in WEBREPL mode using the IP/Wifi configured or default to 192.168.4.1 (essid: fan_control) where you can remotely access its repl/prompt or access its filesystem through using [this](https://micropython.org/webrepl/) tool.
+- Do not nothing ... then the main loop will start by itself..
+
+Unless you have configured the device you will find a essid fan_control, that you can connect to in which you can then go to http://192.168.4.1 and configure
+
+- Wifi configuration
+
+- MQTT, if you enable you need to configure broker etc
+
+- Trigger temp - the fan will start when above this temp ℃
+
+- Override time - this is the time in seconds the fan will either be off/on based on manual "button click" or through web-interface or REST-API
+
+  
+
+## REST API
+
+### Get status
+
+**URL** : `/status`
+
+**Method** : `GET`
+
+
+
+#### Success Response
+
+**Code** : `200 OK`
+
+**Content examples**
+
+```json
+{
+    "state": 'off',
+    "temp": "27.3",
+}
+```
+
+### Turn on/off fan
+
+**URL** : `/status?state=on`
+
+**Method** : `GET`
+
+
+
+#### Success Response
+
+**Code** : `200 OK`
+
+**Content examples**
+
+```json
+{
+    "state": 'on',
+    "temp": "25.2",
+}
+```
+
+
+
+
 
 ## Hardware design
 
@@ -69,8 +159,6 @@ And replace the serial port you are using, and if you like to reset current flas
 ```bash
 esptool.py --port /dev/cu.usbserial-1410 --baud 115200 erase_flash
 ```
-
-
 
 
 
