@@ -74,7 +74,7 @@ You can also watch a short video [here](https://www.youtube.com/watch?v=IIoNmCwB
 3. Clone the repository
 
 ```bash
-git clone xxxxx
+git clone https://github.com/engdan77/iot_fan_controller.git
 ```
 
 4. Upload the firmware, or you like to compile the firmware yourself follow the instruction further down
