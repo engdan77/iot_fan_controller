@@ -183,7 +183,7 @@ esptool.py --port /dev/cu.usbserial-1410 --baud 115200 erase_flash
 Build the docker image of the master branch. The custom Dockerfile will add src as frozen and update the entrypoint
 
 ```bash
-  docker build -t fancontrol-build . && docker create --name fancontrol-build fancontrol-build-container && docker cp fancontrol-build-container:/micropython/ports/esp8266/build-GENERIC/firmware-combined.bin firmware-combined.bin
+  docker build -t fancontrol-build . && docker create --name fancontrol-build-container fancontrol-build && docker cp fancontrol-build-container:/micropython/ports/esp8266/build-GENERIC/firmware-combined.bin firmware-combined.bin && docker stop fancontrol-build-container && docker rm fancontrol-build-container && docker rmi && fancontrol-build 
 ```
 
 To specify a particular version of micropython provide it through the `build-arg`. Otherwise the HEAD of the master branch will be used.
