@@ -93,6 +93,7 @@ class MyFan:
                 if current_temp >= self.trigger_temp and self.on is False:
                     print('turning on fan due to temp above {}'.format(self.trigger_temp))
                     self.switch_state(True)
+                    self.pause_temp_check()
                 elif current_temp < self.trigger_temp and self.on is True:
                     print('turning off fan due to temp below {}'.format(self.trigger_temp))
                     self.switch_state(False)
