@@ -17,7 +17,7 @@
 
 
 
-<img src="https://docs.zerynth.com/latest/_images/nodemcu3.jpg" width="200" />
+<img src="https://en.wikipedia.org/wiki/File:NodeMCU_DEVKIT_1.0.jpg" width="200" />
 
 ## The story and reflections behind this project<a name="Background"></a>
 
