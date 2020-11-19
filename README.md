@@ -17,7 +17,7 @@
 
 
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/NodeMCU_DEVKIT_1.0.jpg" width="200" />
+<img src="https://components101.com/sites/default/files/components/ESP8266-NodeMCU.jpg" width="200" />
 
 ## The story and reflections behind this project<a name="Background"></a>
 
